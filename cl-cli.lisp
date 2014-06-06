@@ -157,8 +157,15 @@ Return both consumed arguments count and the arguments"
 	    (cond
 	      ((= 0 nargs) t)
 	      ((= 1 nargs) (car args))
-	      (t  (subseq args 0 (1- nargs))))))
-      (values nargs argument))))
+	      (t  (subseq args 0 (1- nargs)))))
+	  (type (opt-type option)))
+      (values nargs
+	      (if type
+		  (if (atom argument)
+		      (coerce (read-from-string argument) type)
+		      (loop for a in argument
+			    collect (coerce (read-from-string a) type)))
+		  argument)))))
 
 (defun %parse-options (argv options &key (keys nil))
   (let ((idx 0)
