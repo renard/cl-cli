@@ -51,6 +51,16 @@
              (option-requires-argument-option condition)
              (option-requires-argument-nargs condition)))))
 
+(define-condition bad-argument-type (error)
+  ((option :initarg :option :reader bad-argument-type-option)
+   (type :initarg :type :reader bad-argument-type-type))
+  (:report
+   (lambda (condition stream)
+     (format stream "Option ~S requires a ~(~a~) argument"
+             (bad-argument-type-option condition)
+             (bad-argument-type-type condition)))))
+
+
 
 
 (defun %symbol-to-option-string (symbol)
@@ -161,10 +171,14 @@ Return both consumed arguments count and the arguments"
 	  (type (opt-type option)))
       (values nargs
 	      (if type
-		  (if (atom argument)
-		      (coerce (read-from-string argument) type)
-		      (loop for a in argument
-			    collect (coerce (read-from-string a) type)))
+		  (handler-case
+		      (if (atom argument)
+			  (coerce (read-from-string argument) type)
+			  (loop for a in argument
+				collect (coerce (read-from-string a) type)))
+		    (simple-type-error ()
+		      (error 'bad-argument-type :option (opt-string option)
+						:type type)))
 		  argument)))))
 
 (defun %parse-options (argv options &key (keys nil))
