@@ -95,19 +95,21 @@ Example:  --foo -> FOO
 (defstruct
     (option
      (:conc-name opt-)
-     (:constructor make-option (name default string metavars type help)))
+     (:constructor make-option (name default string alias metavars type help)))
   name
   default
   string
+  alias
   metavars
   type
   help)
 
 
-(defmacro defoption (name &key default metavars type help)
+(defmacro defoption (name &key default alias metavars type help)
   `(make-option ',name
 		(if (boundp ',name) (or (symbol-value ,name) ,default) ,default)
 		(%symbol-to-option-string ',name)
+		,alias
 		,metavars
 		,type
 		(or ,help (documentation ',name 'variable))))
@@ -120,7 +122,8 @@ SPEC is used to describe the function &key arguments."
 	(fn-opts (make-hash-table :test 'equal)))
     (loop for cmd-spec in (getf spec :options)
 	  do (destructuring-bind
-		 (&key name default help metavars type &allow-other-keys) cmd-spec
+		 (&key name default help metavars type alias
+		  &allow-other-keys) cmd-spec
 	       (push (list (intern (string-upcase name))
 			   default)
 		     fn-spec)
@@ -128,7 +131,7 @@ SPEC is used to describe the function &key arguments."
 	       ;; Anyway is there an alternate?
 	       (setf (gethash (%symbol-to-option-string name) fn-opts nil)
 		     (eval
-		      `(defoption ,name :default ,default
+		      `(defoption ,name :default ,default :alias ,alias
 					:metavars ,metavars :type ,type
 					:help ,help)))))
     `(progn
@@ -204,6 +207,9 @@ Return
     (loop for option in options
 	  do (progn
 	       (setf (gethash (opt-string option) opt-hash) option)
+	       ;; Set up aliases
+	       (loop for alias in (opt-alias option)
+		     do (setf (gethash alias opt-hash) option))
 	       ;; Make sure all global options are set
 	       (setf (gethash (opt-name option) bound-option)
 	       	     (opt-default option))))
@@ -281,8 +287,9 @@ its value is returned."
       ,argv ,options ,sub-commands)))
 
 (defun %print-option(option)
-  (format t  "~2T~a~20T~@[ ~{~a~^ ~}~]~35T~{~<~%~35T~0,79:;~a~>~^ ~}~%"
+  (format t  "~2T~a~@[,~{~a~^,~}~]~20T~@[ ~{~a~^ ~}~]~35T~{~<~%~35T~0,79:;~a~>~^ ~}~%"
 	  (opt-string option)
+	  (opt-alias option)
 	  (opt-metavars option)
 	  (split-sequence:split-sequence
 	   #\ (format nil "~a~:[~; (default: ~:*~@a)~]"
