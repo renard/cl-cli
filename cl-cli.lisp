@@ -95,19 +95,21 @@ Example:  --foo -> FOO
 (defstruct
     (option
      (:conc-name opt-)
-     (:constructor make-option (name default nargs string help)))
+     (:constructor make-option (name default string metavars type help)))
   name
   default
-  nargs
   string
+  metavars
+  type
   help)
 
 
-(defmacro defoption (name &key default nargs help)
+(defmacro defoption (name &key default metavars type help)
   `(make-option ',name
 		(if (boundp ',name) (or (symbol-value ,name) ,default) ,default)
-		(or ,nargs 0)
 		(%symbol-to-option-string ',name)
+		,metavars
+		,type
 		(or ,help (documentation ',name 'variable))))
 
 (defmacro defcommand (name spec docstring &body body)
@@ -118,7 +120,7 @@ SPEC is used to describe the function &key arguments."
 	(fn-opts (make-hash-table :test 'equal)))
     (loop for cmd-spec in (getf spec :options)
 	  do (destructuring-bind
-		 (&key name default help nargs &allow-other-keys) cmd-spec
+		 (&key name default help metavars type &allow-other-keys) cmd-spec
 	       (push (list (intern (string-upcase name))
 			   default)
 		     fn-spec)
@@ -127,7 +129,8 @@ SPEC is used to describe the function &key arguments."
 	       (setf (gethash (%symbol-to-option-string name) fn-opts nil)
 		     (eval
 		      `(defoption ,name :default ,default
-					:nargs ,nargs :help ,help)))))
+					:metavars ,metavars :type ,type
+					:help ,help)))))
     `(progn
        ;;(defun ,name (&key ,@fn-spec) ,docstring ,@body)
        (destructuring-bind (&key verbs help &allow-other-keys) ',spec
@@ -143,7 +146,7 @@ SPEC is used to describe the function &key arguments."
 (defun consume-option(args option)
   "Extract all OPTION arguments from ARGS.
 Return both consumed arguments count and the arguments"
-  (let ((nargs (or (opt-nargs option) 0)))
+  (let ((nargs (or (length (opt-metavars option)) 0)))
     (when (< (length args) nargs)
       (error 'option-requires-argument
 	     :option (opt-string option) :nargs nargs))
@@ -280,7 +283,7 @@ its value is returned."
 (defun %print-option(option)
   (format t  "~2T~a~20T~@[ ~{~a~^ ~}~]~35T~{~<~%~35T~0,79:;~a~>~^ ~}~%"
 	  (opt-string option)
-	  (loop for i below (opt-nargs option) collect "ARG")
+	  (opt-metavars option)
 	  (split-sequence:split-sequence
 	   #\ (format nil "~a~:[~; (default: ~:*~@a)~]"
 		      (or (opt-help option) "")
