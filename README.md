@@ -55,15 +55,15 @@ Or in a more laconic way:
 To use it with the `CL-CLI` command line parser you just need to register your
 variable as an `CL-CLI:OPTION`:
 
-	(cl-cli:defoption *debug* :default nil :help "Run in debug mode")
+	(cl-cli:defoption '*debug* :default nil :help "Run in debug mode")
 
 
 Now you only need to call `CL-CLI:RUN` to parse the command line.
 
 	CL-USER> (let ((options
 		(list
-		 (cl-cli::defoption *debug* :default nil)
-		 (cl-cli::defoption *dir* :default "/tmp" :metavars '("DIR")))))
+		 (cl-cli::defoption '*debug* :default nil)
+		 (cl-cli::defoption '*dir* :default "/tmp" :metavars '("DIR")))))
 	      (argv '("./tool")))
 	  (cl-cli::run (:argv argv :options options)
 		       (format t "Workin in ~a. Debug: ~a~%" *DIR* *DEBUG*)))
@@ -77,8 +77,8 @@ If you specify more options in the command line:
 
 	CL-USER> (let ((options
 		(list
-		 (cl-cli::defoption *debug* :default nil)
-		 (cl-cli::defoption *dir* :default "/tmp" :metavars '("DIR"))))
+		 (cl-cli::defoption '*debug* :default nil)
+		 (cl-cli::defoption '*dir* :default "/tmp" :metavars '("DIR"))))
 	      (argv '("./tool" "--debug" "--dir" "/path/to/other/dir")))
 	  (cl-cli::run (:argv argv :options options)
 		       (format t "Workin in ~a. Debug: ~a~%" *DIR* *DEBUG*)))
@@ -99,8 +99,8 @@ structure:
 	CL-USER> (cl-cli:defcommand server-start
 		     (:help "Start server"
 		      :verbs ("server" "start")
-		      :options ((:name restart :help "restart instead of start")
-				(:name delay :default 2 :metavars '("DELAY") :help "Seconds to wait")))
+		      :options ((restart :help "restart instead of start")
+				(:name delay :default 2 :metavars ("DELAY") :help "Seconds to wait")))
 	  "Start or restart server"
 	  (when *debug*
 	    (format t "Delay: ~a Restart: ~a~%" delay restart))
@@ -119,8 +119,8 @@ A full working example would be something like:
 
 	CL-USER> (let ((options
 		(list
-		 (cl-cli::defoption *debug* :default nil)
-		 (cl-cli::defoption *dir* :default "/tmp" :metavars '("DIR"))))
+		 (cl-cli::defoption '*debug* :default nil)
+		 (cl-cli::defoption '*dir* :default "/tmp" :metavars '("DIR"))))
 	      (argv '("./tool" "--dir" "/path/to/chroot" "--debug"
 		      "server" "start" "--restart" "--delay" "3"
 		      "instance1" "isntance2"))
@@ -128,9 +128,9 @@ A full working example would be something like:
 		(list (cl-cli::defcommand server-start
 			  (:help "Start server"
 			   :verbs ("server" "start")
-			   :options ((:name restart
+			   :options ((restart
 				      :help "restart instead of start")
-				     (:name delay :default 2 :metavars '("DELAY")
+				     (delay :default 2 :metavars '("DELAY")
 				      :help "Seconds to wait")))
 			"Start or restart server"
 			(when *debug*
