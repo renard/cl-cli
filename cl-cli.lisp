@@ -114,46 +114,36 @@ Example:  --foo -> FOO
   type
   help)
 
+(defun defoption (name &key default alias metavars type help)
+  (make-option name
+		(if (boundp name) (or (symbol-value name) default) default)
+		(%symbol-to-option-string name)
+		alias
+		metavars
+		type
+		(or help (documentation name 'variable))))
 
-(defmacro defoption (name &key default alias metavars type help)
-  `(make-option ',name
-		(if (boundp ',name) (or (symbol-value ,name) ,default) ,default)
-		(%symbol-to-option-string ',name)
-		,alias
-		,metavars
-		,type
-		(or ,help (documentation ',name 'variable))))
+
 
 (defmacro defcommand (name spec docstring &body body)
   "Create a function NAME with BODY and DOCSTRING.
 
 SPEC is used to describe the function &key arguments."
-  (let (fn-spec
-	(fn-opts (make-hash-table :test 'equal)))
-    (loop for cmd-spec in (getf spec :options)
-	  do (destructuring-bind
-		 (&key name default help metavars type alias
-		  &allow-other-keys) cmd-spec
-	       (push (list (intern (string-upcase name))
-			   default)
-		     fn-spec)
-	       ;; This is not very clean :(
-	       ;; Anyway is there an alternate?
-	       (setf (gethash (%symbol-to-option-string name) fn-opts nil)
-		     (eval
-		      `(defoption ,name :default ,default :alias ,alias
-					:metavars ,metavars :type ,type
-					:help ,help)))))
-    `(progn
-       ;;(defun ,name (&key ,@fn-spec) ,docstring ,@body)
-       (destructuring-bind (&key verbs help &allow-other-keys) ',spec
-	 ;;(make-sub-command #',name ',fn-opts verbs ,docstring help)
-	 (locally
-	     (declare #+sbcl(sb-ext:muffle-conditions style-warning))
-	   (handler-bind
-	       (#+sbcl(style-warning #'muffle-warning))
-	     (make-sub-command ',name #'(lambda (&key ,@fn-spec) ,@body)
-			       ',fn-opts verbs ,docstring help)))))))
+  (let ((fn-opts (make-hash-table :test 'equal)) fn-spec)
+    (loop for option in (getf spec :options)
+	  do (let* ((this-option (apply #'defoption option))
+		    (aliases (opt-alias this-option)))
+	       (setf (gethash (opt-string this-option) fn-opts) this-option)
+		 (loop for alias in aliases
+		       do (setf (gethash alias fn-opts) this-option))
+	       (push (list (opt-name this-option) (opt-default this-option)) fn-spec)))
+    (destructuring-bind (&key verbs help &allow-other-keys) spec
+      (locally
+	  (declare #+sbcl(sb-ext:muffle-conditions style-warning))
+	(handler-bind
+	    (#+sbcl(style-warning #'muffle-warning))
+	  `(make-sub-command ',name  #'(lambda (&key ,@fn-spec) ,@body)
+			     ',fn-opts ',verbs ,docstring ,help))))))
 
 
 (defun consume-option(args option)
