@@ -51,47 +51,66 @@ Or in a more laconic way:
 
 	(defvar *debug*)
 
+Now you only need to defined an option list suitable for `CL-CLI:PARSE-CLI`:
 
-To use it with the `CL-CLI` command line parser you just need to register your
-variable as an `CL-CLI:OPTION`:
+	CL-USER> (defparameter *options*
+	'((*debug* nil "Run in debug mode" :alias ("-d"))
+	  (*dir* "/tmp" "Change to directory" :metavars ("DIR"))))
 
-	(cl-cli:defoption '*debug* :default nil :help "Run in debug mode")
 
+Now you can parse the command line:
 
-Now you only need to call `CL-CLI:RUN` to parse the command line.
-
-	CL-USER> (let ((options
-		(list
-		 (cl-cli::defoption '*debug* :default nil)
-		 (cl-cli::defoption '*dir* :default "/tmp" :metavars '("DIR")))))
-	      (argv '("./tool")))
-	  (cl-cli::run (:argv argv :options options)
-		       (format t "Workin in ~a. Debug: ~a~%" *DIR* *DEBUG*)))
-	
-	Workin in /tmp. Debug: NIL
+	CL-USER> (cl-cli::parse-cli '("./tool" "--dir" "/path/to/chroot" "--debug"
+				      "server" "start" "--restart" "--delay" "3"
+				      "instance1" "isntance2") *options*)
+	(*DEBUG* *DIR*)
+	(T "/path/to/chroot")
+	NIL
+	NIL
 	NIL
 	CL-USER> 
 
+The first two returned values are the variable list and their values
+suitable for `PROGV`. You can now bind these variables and execute code
+using the `CL-CLI:WITH-ENVIRONMENT` macro:
 
-If you specify more options in the command line:
-
-	CL-USER> (let ((options
-		(list
-		 (cl-cli::defoption '*debug* :default nil)
-		 (cl-cli::defoption '*dir* :default "/tmp" :metavars '("DIR"))))
-	      (argv '("./tool" "--debug" "--dir" "/path/to/other/dir")))
-	  (cl-cli::run (:argv argv :options options)
-		       (format t "Workin in ~a. Debug: ~a~%" *DIR* *DEBUG*)))
-	
-	Workin in /path/to/other/dir. Debug: T
+	CL-USER> (multiple-value-bind (vars vals)
+		     (cl-cli::parse-cli '("./tool" "--dir" "/path/to/chroot" "--debug"
+					  "server" "start" "--restart" "--delay" "3"
+					  "instance1" "isntance2") *options*)
+		   (cl-cli::with-environment vars vals
+					     (format t "dir: ~a, debug: ~a~%" *dir* *debug*)))
+	dir: /path/to/chroot, debug: T
 	NIL
-	CL-USER> 
+
 
 ### Advanced usage
 
 A more advanced usage would use sub-commands. A sub-command defined by using
-`CL-CLI:DEFCOMMAND`. A sub-command takes a keyword list as arguments. Those
-arguments are the sub-command options read from the command line.
+`CL-CLI:DEFCOMMAND` which requires a dispatch verb list, an options list, a
+docstring and a body.
+
+	CL-USER> (cl-cli::defcommand
+		     ("server" "start")
+		     ((restart nil "restart instead of start")
+		      (delay 2 "Second to wait" :metavars ("DELAY")))
+		     "Start or restart server"
+		   (when *debug*
+		     (format t "Delay: ~a Restart: ~a~%" delay restart))
+		   (format t "Server ~a in ~a~%"
+			   (if restart "restarted" "started") *dir*)
+		   'start)
+	#S(CL-CLI::SUB-COMMAND
+	   :VERBS ("server" "start")
+	   :OPTIONS ((RESTART NIL "restart instead of start")
+	             (DELAY 2 "Second to wait" :METAVARS ("DELAY")))
+	   :DOCSTRING "Start or restart server"
+	   :FUNC #<FUNCTION (LAMBDA (&KEY (RESTART ()) (DELAY 2))) {1003B1B4DB}>)
+
+
+
+
+
 
 `CL-CLI:DEFCOMMAND` create the function and returns a `CL-CLI:COMMAND`
 structure:
