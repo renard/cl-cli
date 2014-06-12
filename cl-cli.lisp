@@ -100,7 +100,7 @@ Return both consumed arguments count and the arguments"
     ;; Setup lookup hash
     (loop for option in options
 	  for long = (%symbol-to-option-string (car option))
-	  for opt = (apply #'make-option (nconc option `(:long ,long)))
+	  for opt = (apply #'make-option (append option `(:long ,long)))
 	  do (progn
 	       (setf (gethash (opt-name opt) values) (opt-default opt))
 	       (setf (gethash long opts) opt)))
@@ -152,7 +152,7 @@ Return both consumed arguments count and the arguments"
 	       (t
 		(progn
 		  (push (car arg) lambda-list)
-		  (push (nconc (list (car arg) nil) (cdr arg)) positional)))))
+		  (push (append (list (car arg) nil) (cdr arg)) positional)))))
     (values
      (reverse lambda-list)
      (reverse positional)
@@ -206,7 +206,7 @@ Example:
 	  (get-positional-args argv cmd)
 	
 	(values argv opts-hash
-		(nconc positional
+		(append positional
 		       (convert-vars-vals-to-keys opts-vars opts-values))
 		cmd))))))
 
@@ -236,8 +236,8 @@ Return:
   (multiple-value-bind (opts-vars opts-values sub-func sub-opts argv)
       (parse-cli argv options commands)
     (when sub-func
-      (with-environment (nconc opts-vars '(*argv*))
-	(nconc opts-values (list argv))
+      (with-environment (append opts-vars '(*argv*))
+	(append opts-values (list argv))
 	(apply sub-func sub-opts)))))
 
 (defmacro with-environment (vars vals &body body)
