@@ -28,6 +28,17 @@
              (bad-argument-type-option condition)
              (bad-argument-type-type condition)))))
 
+(define-condition not-enougth-pos-args (error)
+  ((command :initarg :command :reader not-enougth-pos-args-command)
+   (count :initarg :count :reader not-enougth-pos-args-count)
+   (items :initarg :items :reader not-enougth-pos-args-items))
+  (:report
+   (lambda (condition stream)
+     (format stream "Command \"~{~a~^ ~}\" requires ~a positional argument~:p: ~{~a~^, ~}."
+             (not-enougth-pos-args-command condition)
+             (not-enougth-pos-args-count condition)
+	     (not-enougth-pos-args-items condition)))))
+
 
 
 (defun %symbol-to-option-string (symbol)
@@ -117,20 +128,43 @@ Return both consumed arguments count and the arguments"
 (defstruct
     (sub-command
      (:conc-name sub-)
-     (:constructor make-sub-command (verbs options docstring func)))
+     (:constructor make-sub-command (verbs options positional docstring func)))
   verbs
   options
+  positional
   docstring
   func)
+
+
+(defun parse-command-args (args)
+  ""
+  (let (positional keys lambda-list)
+    (loop for arg in args
+	  with in
+	  do (cond
+	       ((eq '&key arg) (progn
+				 (push arg lambda-list)
+				 (setf in arg)))
+	       ((eq '&key in)
+		(progn
+		  (push (list (car arg) (nth 1 arg)) lambda-list)
+		  (push arg keys)))
+	       (t
+		(progn
+		  (push (car arg) lambda-list)
+		  (push (nconc (list (car arg) nil) (cdr arg)) positional)))))
+    (values
+     (reverse lambda-list)
+     (reverse positional)
+     (reverse keys))))
 
 (defmacro defcommand (verbs options docstring &body body)
   "Create a new command defined by VERBS list (dispatch arguments) a list of
 OPTIONS, a DOCSTRING and use BODY as dispatch function."
-  (let* ((fn-args (loop for option in options
-			collect (list (car option)
-				      (nth 1 option)))))
-    `(make-sub-command ',verbs ',options ,docstring
-		       (lambda (&key ,@fn-args) ,@body))))
+  (multiple-value-bind (lambda-list positional keys)
+      (parse-command-args options)
+    `(make-sub-command ',verbs ',keys ',positional ,docstring
+		       (lambda (,@lambda-list) ,@body))))
 
 (defun convert-vars-vals-to-keys (vars vals)
   "Convert VARS and VALS lists to a keyword plist.
@@ -141,6 +175,18 @@ Example:
   (loop for i below (length vars)
 	nconc (list (intern (format nil "~a" (nth i vars)) "KEYWORD")
 		    (nth i vals))))
+
+(defun get-positional-args(argv cmd)
+  (let ((nargs (length (sub-positional cmd))))
+    (when (> nargs 0)
+      (when (< (length argv) nargs)
+	(error 'not-enougth-pos-args
+	       :command (sub-verbs cmd)
+	       :count nargs
+	       :items (mapcar #'car (sub-positional cmd))))
+      (values
+       (subseq argv nargs)
+       (subseq argv 0 nargs)))))
 
 (defun parse-commands(argv commands)
   (let* ((len-argv (length argv))
@@ -155,10 +201,14 @@ Example:
 	  (parse-options
 	   (subseq argv (length (sub-verbs cmd)))
 	   (sub-options cmd))
+
+      (multiple-value-bind (argv positional)
+	  (get-positional-args argv cmd)
 	
 	(values argv opts-hash
-		(convert-vars-vals-to-keys opts-vars opts-values)
-		cmd)))))
+		(nconc positional
+		       (convert-vars-vals-to-keys opts-vars opts-values))
+		cmd))))))
 
 (defun parse-cli (argv &optional options commands)
   "Parse ARGV using OPTIONS both and COMMANDS directives.
@@ -186,7 +236,8 @@ Return:
   (multiple-value-bind (opts-vars opts-values sub-func sub-opts argv)
       (parse-cli argv options commands)
     (when sub-func
-      (progv (nconc opts-vars '(*argv*)) (nconc opts-values (list argv))
+      (with-environment (nconc opts-vars '(*argv*))
+	(nconc opts-values (list argv))
 	(apply sub-func sub-opts)))))
 
 (defmacro with-environment (vars vals &body body)
