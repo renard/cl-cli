@@ -219,11 +219,10 @@ Return:
 - matched command dispatch function
 - dispatch function keyword arguments
 - the rest of the command line argument"
-  (let ((argv (cdr argv))
-	(*print-readably* t))
+  (let ((argv (cdr argv)))
     (multiple-value-bind (argv opts-hash opts-vars opts-values)
 	(parse-options argv options)
-      	(declare (ignore opts-hash))
+      (declare (ignore opts-hash))
       (multiple-value-bind (argv sub-opt-hash sub-opts-keys sub)
 	  (parse-commands argv commands)
 	(declare (ignore sub-opt-hash))
