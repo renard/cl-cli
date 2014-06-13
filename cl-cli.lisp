@@ -245,3 +245,68 @@ Return:
     `((lambda (,%vars ,%vals)
 	(progv ,%vars ,%vals
 	  ,@body)) ,vars ,vals)))
+
+
+
+(defun %print-option(option)
+  (format t  "~2T~@[~{~a,~}~]~a~20T~@[ <~{~(~a~)~^ ~}>~]~
+~35T~{~<~%~35T~0,79:;~a~>~^ ~}~%"
+	  (opt-alias option)
+	  (opt-long option)
+	  (opt-metavars option)
+	  (split-sequence:split-sequence
+	   #\ (format nil "~a~:[~; (default: ~:*~@a)~]"
+		      (or (opt-help option) "")
+		      (opt-default option)))))
+
+(defun %print-positional(option)
+  (format t "~2T<~(~a~)>~35T~{~<~%~35T~0,79:;~a~>~^ ~}~%"
+	  (opt-name option)
+	  (split-sequence:split-sequence
+	   #\  (or (opt-help option) ""))))
+
+(defun %make-options-list (options)
+  (loop for option in options
+	for long = (%symbol-to-option-string (car option))
+	collect (apply #'make-option (append option `(:long ,long)))))
+
+(defun help (options sub-commands &key prog-name version)
+  (let ((options (%make-options-list options)))
+
+  
+    (format t "~@[~a~]~@[ version ~a~]~%~%" prog-name version)
+
+    (if sub-commands
+	(loop for sub in sub-commands
+	      do (format t
+			 "~@[~a~]~:[~; [ OPTIONS ]~] ~{~a~^ ~}~
+~:[~; [ OPTIONS ]~] ~{<~(~a~)>~^ ~}~%"
+			 prog-name
+			 options
+			 (sub-verbs sub)
+			 (sub-options sub)
+			 (mapcar #'car (sub-positional sub))))
+	(format t "~@[~a~]~:[~; [ OPTIONS ]~]~%"
+		prog-name options))
+
+
+    (format t "~%")
+    
+    (when options
+      (format t "Global options:~%")
+      (loop for option in options
+	    do (%print-option option)))
+
+    (when sub-commands
+      (format t "~%Sub commands:~%")
+      (loop for sub-command in sub-commands
+	    do (progn
+		 (format t "~%~1T~{~a~^ ~}:~20T~a~%"
+			 (sub-verbs sub-command)
+			 (sub-docstring sub-command))
+		 (loop for option in (%make-options-list (sub-options sub-command))
+		       do (%print-option option))
+		 (loop for option in (%make-options-list (sub-positional sub-command))
+		       do (%print-positional option))
+
+		 )))))
