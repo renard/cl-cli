@@ -51,6 +51,14 @@
 		       collecting c)))
 
 
+(defun %make-options-list (options)
+  "Convert given OPTIONS list into a list of CL-CLI:OPTION"
+  (loop for option in options
+	for long = (%symbol-to-option-string (car option))
+	collect (apply #'make-option (append option `(:long ,long)))))
+
+
+
 
 (defun consume-option (args option)
   "Extract all OPTION arguments from ARGS.
@@ -97,13 +105,12 @@ Return both consumed arguments count and the arguments"
   (let ((opts (make-hash-table :test 'equal))
 	(values (make-hash-table :test 'equal))
 	(idx 0) vars vals)
+
     ;; Setup lookup hash
-    (loop for option in options
-	  for long = (%symbol-to-option-string (car option))
-	  for opt = (apply #'make-option (append option `(:long ,long)))
+    (loop for option in (%make-options-list options)
 	  do (progn
-	       (setf (gethash (opt-name opt) values) (opt-default opt))
-	       (setf (gethash long opts) opt)))
+	       (setf (gethash (opt-name option) values) (opt-default option))
+	       (setf (gethash (opt-long option) opts) option)))
     
     (loop for i from idx below (length argv)
 	  for cur-opt = (nth i argv)
@@ -264,11 +271,6 @@ Return:
 	  (opt-name option)
 	  (split-sequence:split-sequence
 	   #\  (or (opt-help option) ""))))
-
-(defun %make-options-list (options)
-  (loop for option in options
-	for long = (%symbol-to-option-string (car option))
-	collect (apply #'make-option (append option `(:long ,long)))))
 
 (defun help (options sub-commands &key prog-name version)
   (let ((options (%make-options-list options)))
