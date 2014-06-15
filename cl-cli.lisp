@@ -309,6 +309,4 @@ Return:
 		 (loop for option in (%make-options-list (sub-options sub-command))
 		       do (%print-option option))
 		 (loop for option in (%make-options-list (sub-positional sub-command))
-		       do (%print-positional option))
-
-		 )))))
+		       do (%print-positional option)))))))
