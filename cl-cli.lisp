@@ -272,12 +272,17 @@ Return:
 	  (split-sequence:split-sequence
 	   #\  (or (opt-help option) ""))))
 
-(defun help (options sub-commands &key prog-name version)
+(defun help (options sub-commands &key prog-name version prolog epilog)
   (let ((options (%make-options-list options)))
 
   
     (format t "~@[~a~]~@[ version ~a~]~%~%" prog-name version)
 
+    (when prolog
+      (format t "~{~<~%~0,79:;~a~>~^ ~}~%~%"
+	      (split-sequence:split-sequence
+	       #\  prolog)))
+    
     (if sub-commands
 	(loop for sub in sub-commands
 	      do (format t
@@ -290,12 +295,9 @@ Return:
 			 (mapcar #'car (sub-positional sub))))
 	(format t "~@[~a~]~:[~; [ OPTIONS ]~]~%"
 		prog-name options))
-
-
-    (format t "~%")
     
     (when options
-      (format t "Global options:~%")
+      (format t "~%Global options:~%")
       (loop for option in options
 	    do (%print-option option)))
 
@@ -303,10 +305,16 @@ Return:
       (format t "~%Sub commands:~%")
       (loop for sub-command in sub-commands
 	    do (progn
-		 (format t "~%~1T~{~a~^ ~}:~20T~a~%"
+		 (format t "~%~1T~{~a~^ ~}:~20T~{~<~%~20T~0,79:;~a~>~^ ~}~%"
 			 (sub-verbs sub-command)
-			 (sub-docstring sub-command))
+			 (split-sequence:split-sequence
+			  #\  (sub-docstring sub-command)))
 		 (loop for option in (%make-options-list (sub-options sub-command))
 		       do (%print-option option))
 		 (loop for option in (%make-options-list (sub-positional sub-command))
-		       do (%print-positional option)))))))
+		       do (%print-positional option)))))
+
+    (when epilog
+      (format t "~%~{~<~%~0,79:;~a~>~^ ~}~%"
+	      (split-sequence:split-sequence
+	       #\  epilog)))))
