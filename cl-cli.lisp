@@ -63,7 +63,7 @@
 (defun consume-option (args option)
   "Extract all OPTION arguments from ARGS.
 Return both consumed arguments count and the arguments"
-  (let ((nargs (or (length (opt-metavars option)) 0)))
+  (let ((nargs (or (length (opt-params option)) 0)))
     ;;(format t "   ~a ~a~%" nargs option)
     (when (< (length args) nargs)
       (error 'option-requires-argument
@@ -90,13 +90,13 @@ Return both consumed arguments count and the arguments"
 (defstruct
     (option
      (:conc-name opt-)
-     (:constructor make-option (name default help &key long alias metavars type )))
+     (:constructor make-option (name default help &key long alias params type )))
   name
   default
   help
   long
   alias
-  metavars
+  params
   type)
 
 
@@ -260,7 +260,7 @@ Return:
 ~35T~{~<~%~35T~0,79:;~a~>~^ ~}~%"
 	  (opt-alias option)
 	  (opt-long option)
-	  (opt-metavars option)
+	  (opt-params option)
 	  (split-sequence:split-sequence
 	   #\ (format nil "~a~:[~; (default: ~:*~@a)~]"
 		      (or (opt-help option) "")

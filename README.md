@@ -55,7 +55,7 @@ Now you only need to defined an option list suitable for `CL-CLI:PARSE-CLI`:
 
 	CL-USER> (defparameter *options*
 	'((*debug* nil "Run in debug mode" :alias ("-d"))
-	  (*dir* "/tmp" "Change to directory" :metavars ("DIR"))))
+	  (*dir* "/tmp" "Change to directory" :params ("DIR"))))
 
 
 Now you can parse the command line:
@@ -93,7 +93,7 @@ docstring and a body.
 	CL-USER> (cl-cli::defcommand
 		     ("server" "start")
 		     ((restart nil "restart instead of start")
-		      (delay 2 "Second to wait" :metavars ("DELAY")))
+		      (delay 2 "Second to wait" :params ("DELAY")))
 		     "Start or restart server"
 		   (when *debug*
 		     (format t "Delay: ~a Restart: ~a~%" delay restart))
@@ -119,7 +119,7 @@ structure:
 		     (:help "Start server"
 		      :verbs ("server" "start")
 		      :options ((restart :help "restart instead of start")
-				(:name delay :default 2 :metavars ("DELAY") :help "Seconds to wait")))
+				(:name delay :default 2 :params ("DELAY") :help "Seconds to wait")))
 	  "Start or restart server"
 	  (when *debug*
 	    (format t "Delay: ~a Restart: ~a~%" delay restart))
@@ -139,7 +139,7 @@ A full working example would be something like:
 	CL-USER> (let ((options
 		(list
 		 (cl-cli::defoption '*debug* :default nil)
-		 (cl-cli::defoption '*dir* :default "/tmp" :metavars '("DIR"))))
+		 (cl-cli::defoption '*dir* :default "/tmp" :params '("DIR"))))
 	      (argv '("./tool" "--dir" "/path/to/chroot" "--debug"
 		      "server" "start" "--restart" "--delay" "3"
 		      "instance1" "isntance2"))
@@ -149,7 +149,7 @@ A full working example would be something like:
 			   :verbs ("server" "start")
 			   :options ((restart
 				      :help "restart instead of start")
-				     (delay :default 2 :metavars '("DELAY")
+				     (delay :default 2 :params '("DELAY")
 				      :help "Seconds to wait")))
 			"Start or restart server"
 			(when *debug*
@@ -159,7 +159,7 @@ A full working example would be something like:
 		      (cl-cli::defcommand server-stop
 			  (:help "Stop server"
 			   :verbs ("server" "stop")
-			   :options ((:name delay :default 2 :metavars '("DELAY")
+			   :options ((:name delay :default 2 :params '("DELAY")
 				      :help "Seconds to wait")))
 			"Stop server"
 			(when *debug*
