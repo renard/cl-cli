@@ -210,6 +210,47 @@ macro.
 * `docstring`: a string that is used to display help.
 * `func`: a function body that should handle the command.
 
+### Functions
+
+#### parse-cli
+
+	parse-cli (argv &optional options commands)
+
+Parse `ARGV` using `OPTIONS` both and `COMMANDS` directives.
+
+Returns
+* options variables
+* options values
+* matched command dispatch function
+* dispatch function keyword arguments
+* the rest of the command line argument"
+
+#### with-environment
+
+	with-environment (vars vals &body body)
+
+Run `BODY` after binding `VARS` to `VALS`.
+
+The 2 first values of `parse-cli` can be used to feen `with-environment`.
+
+#### run-command
+
+	run-command (argv &optional options commands)
+
+Run `parse-cli` and execute the matched dispatch function.
+
+#### help
+
+	help (options sub-commands &key prog-name version prolog epilog)
+
+Display help screen.
+
+* `prog-name`: the program name.
+* `version`: the program version.
+* `prolog`: a text that should be displayed at the beging.
+* `epilog`: a text that should be diplayed at the end.
+
+
 
 
 ## Copyright
