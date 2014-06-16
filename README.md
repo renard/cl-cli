@@ -175,6 +175,40 @@ A full working example would be something like:
 
 ## API
 
+### The options list
+
+This is a list of options you pass to te parser. Each option is defined as:
+
+	(name default help &key long alias params type)
+
+* `name`: the option name, or variable to which the option is bound to.
+* `default`: The option default value.
+* `help`: a docstring that is used to display help.
+* `long`: the option long form generated against `name`. For example
+  `*foo-bar*`: will result as `--foo-bar`.
+* `alias`: a list of option aliases. This is a good place to define
+  shortcuts such as `-f` for `--foo` or `-b` for `--bar`.
+* `params`: a list of option parameters that define how many arguments the
+  option requires. If `params` is `nil` no option is required. n the other
+  hand if you need to defined a chroot diretory you can setup `params` to
+  `("dir")`. Thus `--chroot` requires one mandatory argument. The `"dir"`
+  string is used in help display.
+* `type`: A type to which the option should be converted to.
+
+### The commands list
+
+As for options, the command list defined all known commands the parser
+should be aware of. A command is created using the `CL-CLI:DEFCOMMAND`
+macro.
+
+	(defcommand verbs options positional docstring func)
+
+* `verbs`: A list of words that triggers the command.
+* `options`: a list of command options.
+* `positional`: a list of mandatory positional arguments (order
+  maters). This is like an option but with no default value.
+* `docstring`: a string that is used to display help.
+* `func`: a function body that should handle the command.
 
 
 
