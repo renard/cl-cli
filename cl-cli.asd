@@ -5,7 +5,7 @@
   :licence "WTFPL"
   :description "Command line parser"
   :long-description "Simple and easy to use modern command line argument parser for common lisp."
-  :depends-on (#:alexandria #:split-sequence)
+  :depends-on (#:split-sequence)
   :pathname "."
   :components
   ((:file "cl-cli")))
