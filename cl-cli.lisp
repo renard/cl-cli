@@ -144,7 +144,13 @@ Return both consumed arguments count and the arguments"
 
 
 (defun parse-command-args (args)
-  ""
+  "Parse ARGS and return 3 lists:
+
+- A function suitable lambda-list
+- A list of all positional arguments
+- A list of all key arguments.
+
+ARGS is a lambda-list as defined for defcommand."
   (let (positional keys lambda-list)
     (loop for arg in args
 	  with in
