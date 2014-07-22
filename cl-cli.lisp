@@ -3,7 +3,8 @@
   (:export
    #:defcommand
    #:parse-cli
-   #:run-command))
+   #:run-command
+   #:with-environment))
 
 
 (in-package #:cl-cli)
