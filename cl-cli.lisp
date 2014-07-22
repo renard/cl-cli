@@ -106,12 +106,16 @@ Return both consumed arguments count and the arguments"
 	(values (make-hash-table :test 'equal))
 	(idx 0) vars vals)
 
-    ;; Setup lookup hash
+    ;; Setup lookup has
     (loop for option in (%make-options-list options)
 	  do (progn
 	       (setf (gethash (opt-name option) values) (opt-default option))
-	       (setf (gethash (opt-long option) opts) option)))
-    
+	       ;; For long option
+	       (setf (gethash (opt-long option) opts) option)
+	       ;; For alias as well
+	       (loop for alias in (opt-alias option)
+		     do (setf (gethash alias opts) option))))
+
     (loop for i from idx below (length argv)
 	  for cur-opt = (nth i argv)
 	  for cur-opt-def = (gethash cur-opt opts)
