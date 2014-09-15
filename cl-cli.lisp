@@ -241,9 +241,11 @@ Return:
     (multiple-value-bind (argv opts-hash opts-vars opts-values)
 	(parse-options argv options)
       (declare (ignore opts-hash))
+      (format t "ARGV: ~S~%" argv)
       (multiple-value-bind (argv sub-opt-hash sub-opts-keys sub)
 	  (parse-commands argv commands)
 	(declare (ignore sub-opt-hash))
+	(format t "ARGV: ~S~%" argv)
 	(values opts-vars opts-values
 		(when sub (sub-func sub)) sub-opts-keys argv)))))
 
