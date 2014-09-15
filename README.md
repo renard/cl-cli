@@ -23,19 +23,17 @@ It is up to the programmer's responsibility to parse and interpret the
 command line. We can split that command line into several parts:
 
 
-* The *program name* (`CL-CLI:*PROG-NAME*`): `./tool`. This is how the
-  program is called.
-* Some *global options* (`CL-CLI:*GLOBAL-OPTIONS*`): `--verbose --chroot
-  /path/to/dir`. Each option can be a *switch*, such as `--verbose`, which
-  is argument less, or can have one (or many) argument: `/path/to/dir` is an
-  argument of the `--chroot` option.
-* A *sub-command* (`CL-CLI:*SUB-COMMAND*`): `server start`. A sub command
-  can be one or many verbs (or terms).
-* Some *sub-command options* (`CL-CLI:*SUB-COMMAND-OPTIONS*`): `--restart
-  --delay 10`. This is the same as the *global options* but specific to the
-  *sub-command*.
-* A *rest* (`CL-CLI:*REST*`): `instance1 instance2` its the command line
-  remains after parsing process.
+* The *program name*: `./tool`. This is how the program is called.
+* Some *global options*: `--verbose --chroot /path/to/dir`. Each option can
+  be a *switch*, such as `--verbose`, which is argument less, or can have
+  one (or many) argument: `/path/to/dir` is an argument of the `--chroot`
+  option.
+* A *sub-command*: `server start`. A sub command can be one or many verbs
+  (or terms).
+* Some *sub-command options*: `--restart --delay 10`. This is the same as
+  the *global options* but specific to the *sub-command*.
+* A *rest*: `instance1 instance2` its the command line remains after parsing
+  process.
 
 ## CL-CLI usage
 
@@ -83,6 +81,8 @@ using the `CL-CLI:WITH-ENVIRONMENT` macro:
 	dir: /path/to/chroot, debug: T
 	NIL
 
+The 3rd and 4th values are the sub-command to be run (if any, see below) and
+its arguments. The 5th value is the cli rest after parsing.
 
 ### Advanced usage
 
@@ -106,9 +106,6 @@ docstring and a body.
 	             (DELAY 2 "Second to wait" :METAVARS ("DELAY")))
 	   :DOCSTRING "Start or restart server"
 	   :FUNC #<FUNCTION (LAMBDA (&KEY (RESTART ()) (DELAY 2))) {1003B1B4DB}>)
-
-
-
 
 
 
