@@ -213,20 +213,20 @@ Example:
 		    when (and (>= len-argv (length verbs))
 			      (equal verbs (subseq argv 0 (length verbs))))
 		     return command)))
-    (when cmd
+    (if (not cmd)
+	argv
+	(multiple-value-bind (argv opts-hash opts-vars opts-values)
+	    (parse-options
+	     (subseq argv (length (sub-verbs cmd)))
+	     (sub-options cmd))
 
-      (multiple-value-bind (argv opts-hash opts-vars opts-values)
-	  (parse-options
-	   (subseq argv (length (sub-verbs cmd)))
-	   (sub-options cmd))
-
-      (multiple-value-bind (argv positional)
-	  (get-positional-args argv cmd)
+	  (multiple-value-bind (argv positional)
+	      (get-positional-args argv cmd)
 	
-	(values argv opts-hash
-		(append positional
-		       (convert-vars-vals-to-keys opts-vars opts-values))
-		cmd))))))
+	    (values argv opts-hash
+		    (append positional
+			    (convert-vars-vals-to-keys opts-vars opts-values))
+		    cmd))))))
 
 (defun parse-cli (argv &optional options commands)
   "Parse ARGV using OPTIONS both and COMMANDS directives.
