@@ -4,7 +4,8 @@
    #:defcommand
    #:parse-cli
    #:run-command
-   #:with-environment))
+   #:with-environment
+   #:help))
 
 
 (in-package #:cl-cli)
