@@ -58,7 +58,7 @@ Now you only need to defined an option list suitable for `CL-CLI:PARSE-CLI`:
 
 Now you can parse the command line:
 
-	CL-USER> (cl-cli::parse-cli '("./tool" "--dir" "/path/to/chroot" "--debug"
+	CL-USER> (cl-cli:parse-cli '("./tool" "--dir" "/path/to/chroot" "--debug"
 				      "server" "start" "--restart" "--delay" "3"
 				      "instance1" "isntance2") *options*)
 	(*DEBUG* *DIR*)
@@ -73,10 +73,10 @@ suitable for `PROGV`. You can now bind these variables and execute code
 using the `CL-CLI:WITH-ENVIRONMENT` macro:
 
 	CL-USER> (multiple-value-bind (vars vals)
-		     (cl-cli::parse-cli '("./tool" "--dir" "/path/to/chroot" "--debug"
+		     (cl-cli:parse-cli '("./tool" "--dir" "/path/to/chroot" "--debug"
 					  "server" "start" "--restart" "--delay" "3"
 					  "instance1" "isntance2") *options*)
-		   (cl-cli::with-environment vars vals
+		   (cl-cli:with-environment vars vals
 					     (format t "dir: ~a, debug: ~a~%" *dir* *debug*)))
 	dir: /path/to/chroot, debug: T
 	NIL
@@ -90,7 +90,7 @@ A more advanced usage would use sub-commands. A sub-command defined by using
 `CL-CLI:DEFCOMMAND` which requires a dispatch verb list, an options list, a
 docstring and a body.
 
-	CL-USER> (cl-cli::defcommand
+	CL-USER> (cl-cli:defcommand
 		     ("server" "start")
 		     ((restart nil "restart instead of start")
 		      (delay 2 "Second to wait" :params ("DELAY")))
@@ -100,7 +100,7 @@ docstring and a body.
 		   (format t "Server ~a in ~a~%"
 			   (if restart "restarted" "started") *dir*)
 		   'start)
-	#S(CL-CLI::SUB-COMMAND
+	#S(CL-CLI:SUB-COMMAND
 	   :VERBS ("server" "start")
 	   :OPTIONS ((RESTART NIL "restart instead of start")
 	             (DELAY 2 "Second to wait" :METAVARS ("DELAY")))
@@ -121,7 +121,7 @@ structure:
 	  (when *debug*
 	    (format t "Delay: ~a Restart: ~a~%" delay restart))
 	  (format t "Server ~a in ~a~%" (if restart "restarted" "started") *dir*))
-	#S(CL-CLI::SUB-COMMAND
+	#S(CL-CLI:SUB-COMMAND
 	   :NAME SERVER-START
 	   :FUNCTION #<FUNCTION (LAMBDA (&KEY (DELAY 2) (RESTART ()))) {1006330A7B}>
 	   :ARGS #<HASH-TABLE :TEST EQUAL :COUNT 2 {1006153A43}>
@@ -135,13 +135,13 @@ A full working example would be something like:
 
 	CL-USER> (let ((options
 		(list
-		 (cl-cli::defoption '*debug* :default nil)
-		 (cl-cli::defoption '*dir* :default "/tmp" :params '("DIR"))))
+		 (cl-cli:defoption '*debug* :default nil)
+		 (cl-cli:defoption '*dir* :default "/tmp" :params '("DIR"))))
 	      (argv '("./tool" "--dir" "/path/to/chroot" "--debug"
 		      "server" "start" "--restart" "--delay" "3"
 		      "instance1" "isntance2"))
 	      (sub-commands
-		(list (cl-cli::defcommand server-start
+		(list (cl-cli:defcommand server-start
 			  (:help "Start server"
 			   :verbs ("server" "start")
 			   :options ((restart
@@ -153,7 +153,7 @@ A full working example would be something like:
 			  (format t "Delay: ~a Restart: ~a~%" delay restart))
 			(format t "Server ~a in ~a~%"
 				(if restart "restarted" "started") *dir*))
-		      (cl-cli::defcommand server-stop
+		      (cl-cli:defcommand server-stop
 			  (:help "Stop server"
 			   :verbs ("server" "stop")
 			   :options ((:name delay :default 2 :params '("DELAY")
@@ -162,7 +162,7 @@ A full working example would be something like:
 			(when *debug*
 			  (format t "Delay: ~a~%" delay))
 			(format t "Server stopped in ~a~%" *dir*)))))
-	  (cl-cli::run (:argv argv :options options :sub-commands sub-commands)))
+	  (cl-cli:run (:argv argv :options options :sub-commands sub-commands)))
 	
 	
 	Delay: 3 Restart: T
