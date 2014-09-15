@@ -1,6 +1,7 @@
 
 (asdf:defsystem #:cl-cli
   :author ("Sébastien Gross")
+  :version "0.2"
   :maintainer "Sébastien Gross"
   :licence "WTFPL"
   :description "Command line parser"
