@@ -251,6 +251,13 @@ Return:
 		(when sub (sub-func sub)) sub-opts-keys argv)))))
 
 
+(defmacro with-environment (vars vals &body body)
+  (let ((%vars (gensym))
+	(%vals (gensym)))
+    `((lambda (,%vars ,%vals)
+	(progv ,%vars ,%vals
+	  ,@body)) ,vars ,vals)))
+
 (defun run-command (argv &optional options commands)
   "Parse ARGV using OPTIONS both and COMMANDS directives."
   (multiple-value-bind (opts-vars opts-values sub-func sub-opts argv)
@@ -259,13 +266,6 @@ Return:
       (with-environment (append opts-vars '(*argv*))
 	(append opts-values (list argv))
 	(apply sub-func sub-opts)))))
-
-(defmacro with-environment (vars vals &body body)
-  (let ((%vars (gensym))
-	(%vals (gensym)))
-    `((lambda (,%vars ,%vals)
-	(progv ,%vars ,%vals
-	  ,@body)) ,vars ,vals)))
 
 
 
