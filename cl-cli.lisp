@@ -2,6 +2,7 @@
   (:use #:cl)
   (:export
    #:defcommand
+   #:defcommand-to-list
    #:parse-cli
    #:run-command
    #:with-environment
@@ -184,6 +185,13 @@ OPTIONS, a DOCSTRING and use BODY as dispatch function."
       (parse-command-args options)
     `(make-sub-command ',verbs ',keys ',positional ,docstring
 		       (lambda (,@lambda-list) ,@body))))
+
+(defmacro defcommand-to-list (var verbs options docstring &body body)
+  "Call DEFCOMMAND and append result to VAR."
+  `(setq ,var
+	 (nconc ,var
+		(list (defcommand ,verbs ,options ,docstring ,@body)))))
+
 
 (defun convert-vars-vals-to-keys (vars vals)
   "Convert VARS and VALS lists to a keyword plist.
