@@ -270,11 +270,12 @@ Return:
   "Parse ARGV using OPTIONS both and COMMANDS directives."
   (multiple-value-bind (opts-vars opts-values sub-func sub-opts argv)
       (parse-cli argv options commands)
-    (when sub-func
-      (with-environment (append opts-vars '(*argv*))
-	(append opts-values (list argv))
-	(apply sub-func sub-opts)))))
-
+    (values
+     (when sub-func
+       (with-environment (append opts-vars '(*argv*))
+	   (append opts-values (list argv))
+	 (apply sub-func sub-opts)))
+     opts-vars opts-values sub-func sub-opts argv)))
 
 
 (defun %print-option(option)
