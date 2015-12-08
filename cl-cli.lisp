@@ -6,7 +6,8 @@
    #:parse-cli
    #:run-command
    #:with-environment
-   #:help))
+   #:help
+   #:version))
 
 
 (in-package #:cl-cli)
@@ -294,6 +295,16 @@ Return:
 	  (opt-name option)
 	  (split-sequence:split-sequence
 	   #\  (or (opt-help option) ""))))
+
+
+(defun version (prog-name version &key copyright quit)
+  (format t "~@[~a~]~@[ version ~a~]~%" prog-name version)
+  (format t "~@[Built using ~a~]~%" (uiop/os:implementation-identifier))
+  (format t "~@[~%~a~%~]" copyright)
+
+  (when quit
+    (uiop:quit quit)))
+
 
 (defun help (options sub-commands &key prog-name version prolog epilog)
   (let ((options (%make-options-list options)))
